@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hidz | Downloader</title>
+    <script>
+        // Set tema sebelum halaman digambar biar ga ada flash warna salah
+        (function () {
+            try {
+                var saved = localStorage.getItem('hidz-theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="icon" type="image/png" href="https://www.gobox.my.id/file/IcHjU.png">
+    <!-- Dependencies: Axios & FontAwesome -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --ink: #111111;
+            --ink-fixed: #111111;
+            --paper: #FBF3E4;
+            --white: #FFFFFF;
+            --lime: #CFFF4D;
+            --pink: #FF4FA3;
+            --blue: #3E7BFA;
+            --red: #E8384F;
+            --text-dim: #8a8172;
+            --dot: rgba(17, 17, 17, 0.09);
+            --sh-sm: 3px 3px 0 var(--ink);
+            --sh-md: 6px 6px 0 var(--ink);
+            --sh-lg: 9px 9px 0 var(--ink);
+            color-scheme: light;
+        }
+
+        [data-theme="dark"] {
+            --ink: #F1EBDA;
+            --paper: #131318;
+            --white: #1E1E27;
+            --text-dim: #948E7E;
+            --dot: rgba(241, 235, 218, 0.06);
+            color-scheme: dark;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--paper);
+            background-image: radial-gradient(var(--dot) 1.5px, transparent 1.5px);
+            background-size: 22px 22px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 16px 28px;
+            overflow-x: hidden;
+            color: var(--ink);
+            position: relative;
+            transition: background-color .25s ease, color .25s ease;
+        }
+
+        /* === Elemen dekoratif Y2K === */
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: var(--blue);
+            border-radius: 50%;
+            opacity: .3;
+            animation: twinkle 3.6s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: .12; }
+            50% { opacity: .5; }
+        }
+
+        .chrome-orb {
+            position: fixed;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 28%, #ffffff 0%, #d9dcee 16%, #a6a9d2 40%, #6a6ca4 64%, #35365c 88%);
+            border: 3px solid var(--ink);
+            box-shadow: var(--sh-md);
+            top: 7%;
+            right: 6%;
+            z-index: 0;
+            animation: floatY 7s ease-in-out infinite;
+        }
+
+        .paper-star {
+            position: fixed;
+            width: 76px;
+            height: 76px;
+            background: var(--pink);
+            border: 3px solid var(--ink);
+            border-radius: 16px;
+            bottom: 9%;
+            left: 5%;
+            z-index: 0;
+            box-shadow: var(--sh-md);
+            transform: rotate(18deg);
+            animation: floatRotate 10s ease-in-out infinite;
+        }
+
+        .paper-star::after {
+            content: '\2605';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: var(--ink-fixed);
+            transform: rotate(-18deg);
+        }
+
+        @keyframes floatY {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-14px); }
+        }
+
+        @keyframes floatRotate {
+            0%, 100% { transform: rotate(18deg) translateY(0); }
+            50% { transform: rotate(9deg) translateY(-10px); }
+        }
+
+        @media (max-width: 480px) {
+            .chrome-orb, .paper-star { display: none; }
+        }
+
+        /* === Ticker ala web Y2K === */
+        .ticker {
+            width: 100vw;
+            margin-left: calc(50% - 50vw);
+            margin-right: calc(50% - 50vw);
+            overflow: hidden;
+            background: var(--ink-fixed);
+            border-bottom: 3px solid var(--ink);
+            padding: 7px 0;
+            position: relative;
+            z-index: 3;
+            margin-bottom: 22px;
+        }
+
+        .ticker-track {
+            display: flex;
+            gap: 32px;
+            width: max-content;
+            animation: tickerScroll 28s linear infinite;
+        }
+
+        .ticker-track span {
+            color: var(--lime);
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        @keyframes tickerScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* === Navbar === */
+        .navbar {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 22px;
+            margin-bottom: 22px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 1rem;
+            background: var(--white);
+            color: var(--ink);
+            border: 3px solid var(--ink);
+            border-radius: 10px;
+            padding: 8px 14px;
+            box-shadow: var(--sh-sm);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transform: rotate(-2deg);
+            letter-spacing: -0.01em;
+        }
+
+        .logo img {
+            width: 20px;
+            height: 20px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1.5px solid var(--ink);
+        }
+
+        .theme-toggle {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            background: var(--lime);
+            color: var(--ink-fixed);
+            border: 2.5px solid var(--ink);
+            border-radius: 50%;
+            box-shadow: var(--sh-sm);
+            transform: rotate(4deg);
+            cursor: pointer;
+            transition: transform .12s, box-shadow .12s;
+        }
+        .theme-toggle:hover  { transform: rotate(4deg) translate(-2px, -2px); box-shadow: var(--sh-md); }
+        .theme-toggle:active { transform: rotate(4deg) translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+        .theme-toggle:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+        /* === Card === */
+        .card {
+            width: 100%;
+            max-width: 420px;
+            border: 3px solid var(--ink);
+            border-radius: 22px;
+            box-shadow: var(--sh-lg);
+            background: var(--white);
+            margin-bottom: 26px;
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: var(--lime);
+            padding: 22px 20px;
+            border-bottom: 3px solid var(--ink);
+            position: relative;
+        }
+
+        .plus {
+            position: absolute;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+        .card-header .plus { color: var(--ink-fixed); }
+        .p-tl { top: 8px; left: 10px; }
+        .p-tr { top: 8px; right: 10px; }
+        .p-bl { bottom: 8px; left: 10px; }
+        .p-br { bottom: 8px; right: 10px; }
+
+        .profile-box { display: flex; align-items: center; gap: 14px; }
+
+        .avatar {
+            width: 54px;
+            height: 54px;
+            border: 3px solid var(--ink);
+            border-radius: 14px;
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--sh-sm);
+            flex-shrink: 0;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 11px; }
+
+        .card-body { padding: 24px 20px; position: relative; background: var(--white); }
+
+        .label-input {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            color: var(--ink);
+            opacity: .65;
+        }
+
+        .main-input {
+            width: 100%;
+            padding: 13px 14px;
+            font-size: 13.5px;
+            font-weight: 600;
+            border: 3px solid var(--ink);
+            border-radius: 12px;
+            background: var(--paper);
+            color: var(--ink);
+            margin-bottom: 16px;
+            outline: none;
+            box-shadow: var(--sh-sm);
+            transition: box-shadow .15s, transform .15s;
+        }
+        .main-input:focus { box-shadow: var(--sh-md); transform: translate(-2px, -2px); }
+        .main-input::placeholder { color: var(--text-dim); font-weight: 500; }
+
+        .tags {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 22px;
+        }
+
+        .tag {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2.5px solid var(--ink);
+            padding: 9px 4px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background: var(--white);
+            color: var(--ink);
+            box-shadow: 3px 3px 0 var(--ink);
+            transition: transform .12s, box-shadow .12s;
+        }
+        .tag:nth-child(-n+4)              { background: var(--lime); color: var(--ink-fixed); }
+        .tag:nth-child(n+5):nth-child(-n+8) { background: var(--blue); color: var(--white); }
+        .tag:nth-child(n+9)                { background: var(--pink); color: var(--white); }
+        .tag:hover  { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--ink); }
+        .tag:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+
+        @media (max-width: 400px) {
+            .tags { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .btn-download {
+            width: 100%;
+            padding: 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            background: var(--lime);
+            color: var(--ink-fixed);
+            border: 3px solid var(--ink);
+            border-radius: 14px;
+            box-shadow: var(--sh-md);
+            cursor: pointer;
+            margin-bottom: 14px;
+            transition: transform .1s, box-shadow .1s;
+        }
+        .btn-download:active { transform: translate(3px, 3px); box-shadow: 3px 3px 0 var(--ink); }
+        .btn-download:disabled { opacity: .55; cursor: not-allowed; }
+
+        .btn-click-animation { animation: btnPop .2s cubic-bezier(0.34, 1.2, 0.64, 1) forwards !important; }
+        @keyframes btnPop {
+            0%   { transform: translate(0, 0); box-shadow: var(--sh-md); }
+            50%  { transform: translate(3px, 3px); box-shadow: 3px 3px 0 var(--ink); }
+            100% { transform: translate(0, 0); box-shadow: var(--sh-md); }
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            margin: 8px 0 4px;
+            color: var(--ink);
+            animation: pulseLoader 1.1s ease-in-out infinite;
+        }
+        @keyframes pulseLoader {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .35; }
+        }
+
+        .error-msg {
+            color: var(--red);
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 8px;
+            text-align: center;
+            letter-spacing: 0.03em;
+        }
+
+        #resultArea { margin-top: 20px; border-top: 3px dashed var(--ink); padding-top: 18px; }
+        #resTitle { font-size: 11.5px; font-weight: 700; color: var(--ink); margin-bottom: 10px; letter-spacing: 0.02em; }
+        #downloadLinks { margin-top: 15px; }
+
+        .preview-box {
+            width: 100%;
+            border: 3px solid var(--ink);
+            border-radius: 14px;
+            margin-top: 4px;
+            background: var(--ink-fixed);
+            overflow: hidden;
+            box-shadow: var(--sh-sm);
+        }
+        .preview-box video, .preview-box img { width: 100%; display: block; }
+
+        .dl-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border: 2.5px solid var(--ink);
+            border-radius: 12px;
+            margin-top: 9px;
+            text-decoration: none;
+            color: var(--ink);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            background: var(--paper);
+            box-shadow: 3px 3px 0 var(--ink);
+            transition: transform .12s, box-shadow .12s, background .12s;
+        }
+        .dl-item:hover  { background: var(--lime); color: var(--ink-fixed); transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--ink); }
+        .dl-item:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+
+        .footer {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-top: auto;
+            padding: 10px 18px;
+            border: 2.5px solid var(--ink);
+            border-radius: 30px;
+            background: var(--white);
+            box-shadow: var(--sh-sm);
+            position: relative;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .badge {
+            background: var(--ink-fixed);
+            color: var(--lime);
+            padding: 4px 9px;
+            border-radius: 20px;
+        }
+
+        :focus-visible {
+            outline: 3px solid var(--blue);
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars" id="stars"></div>
+    <div class="chrome-orb"></div>
+    <div class="paper-star"></div>
+
+    <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+            <span>&#9733; TANPA WATERMARK</span>
+            <span>&#9733; 100% GRATIS</span>
+            <span>&#9733; TIKTOK &bull; DOUYIN &bull; THREADS &bull; IG &bull; FB &bull; PINTEREST &bull; REDDIT &bull; X &bull; YT &bull; VIMEO &bull; SOUNDCLOUD &bull; SPOTIFY</span>
+            <span>&#9733; CEPET &amp; GA RIBET</span>
+            <span>&#9733; TANPA WATERMARK</span>
+            <span>&#9733; 100% GRATIS</span>
+            <span>&#9733; TIKTOK &bull; DOUYIN &bull; THREADS &bull; IG &bull; FB &bull; PINTEREST &bull; REDDIT &bull; X &bull; YT &bull; VIMEO &bull; SOUNDCLOUD &bull; SPOTIFY</span>
+            <span>&#9733; CEPET &amp; GA RIBET</span>
+        </div>
+    </div>
+
+    <header class="navbar">
+        <h1 class="logo">
+            <img src="https://www.gobox.my.id/file/IcHjU.png" alt="icon">
+            HidzDownloader
+        </h1>
+        <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Ganti tampilan terang/gelap">
+            <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+    </header>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="plus p-tl">+</span>
+            <span class="plus p-tr">+</span>
+            <div class="profile-box">
+                <div class="avatar"><img src="https://www.gobox.my.id/file/IcHjU.png" alt="Hidz"></div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <label class="label-input">TARGET URL:</label>
+            <input type="text" id="urlInput" class="main-input" placeholder="paste link disini">
+
+            <div class="tags">
+                <div class="tag" onclick="setEx('https://open.spotify.com/track/...')">#SPOTIFY</div>
+                <div class="tag" onclick="setEx('https://vt.tiktok.com/...')">#TIKTOK</div>
+                <div class="tag" onclick="setEx('https://www.instagram.com/...')">#INSTAGRAM</div>
+                <div class="tag" onclick="setEx('https://www.youtube.com/...')">#YOUTUBE</div>
+                <div class="tag" onclick="setEx('https://facebook.com/...')">#FACEBOOK</div>
+                <div class="tag" onclick="setEx('https://x.com/...')">#X</div>
+                <div class="tag" onclick="setEx('https://www.douyin.com/video/...')">#DOUYIN</div>
+                <div class="tag" onclick="setEx('https://www.threads.net/@user/post/...')">#THREADS</div>
+                <div class="tag" onclick="setEx('https://pin.it/...')">#PINTEREST</div>
+                <div class="tag" onclick="setEx('https://www.reddit.com/r/sub/comments/...')">#REDDIT</div>
+                <div class="tag" onclick="setEx('https://vimeo.com/...')">#VIMEO</div>
+                <div class="tag" onclick="setEx('https://soundcloud.com/artist/track...')">#SOUNDCLOUD</div>
+            </div>
+
+            <button id="btnDownload" onclick="handleDownload()" class="btn-download">
+                GENERATE
+            </button>
+
+            <div id="loader" class="loader">SABAR DULU LAGI CARI VT NYA</div>
+            <div id="errorBox" class="error-msg"></div>
+
+            <!-- Result Section -->
+            <div id="resultArea" style="display:none;">
+                <p id="resTitle"></p>
+                <div id="previewContainer" class="preview-box"></div>
+                <div id="downloadLinks"></div>
+            </div>
+
+            <span class="plus p-bl">+</span>
+            <span class="plus p-br">+</span>
+        </div>
+    </div>
+
+    <footer class="footer">
+        POWERED BY <span class="badge">HidzForum</span>
+    </footer>
+
+    <script>
+        // Generate stars function dari getcodr.html
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const starCount = 200;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 1;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // === THEME TOGGLE (light/dark) ===
+        function currentTheme() {
+            return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        }
+
+        function setThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function toggleTheme() {
+            const next = currentTheme() === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            setThemeIcon(next);
+            try { localStorage.setItem('hidz-theme', next); } catch (e) {}
+        }
+
+        // Animasi klik pada button (tanpa mengubah teks)
+        function addButtonClickAnimation(buttonElement) {
+            if (!buttonElement) return;
+            buttonElement.classList.remove('btn-click-animation');
+            void buttonElement.offsetWidth;
+            buttonElement.classList.add('btn-click-animation');
+            setTimeout(() => {
+                buttonElement.classList.remove('btn-click-animation');
+            }, 200);
+        }
+
+        // Fungsi Set Contoh Link (TIDAK BERUBAH)
+        function setEx(url) {
+            document.getElementById('urlInput').value = url;
+        }
+
+        // === SPOTIFY SCRAPER (dari code.js, dikonversi ke browser) ===
+        function isSpotifyUrl(url) {
+            return url.includes('open.spotify.com') || url.includes('spotify.com/track');
+        }
+
+        async function spotifyGetXsrf() {
+            const PROXY = 'https://corsproxy.io/?';
+            const BASE = 'https://spotmate.online';
+            const res = await fetch(PROXY + encodeURIComponent(BASE + '/en1'));
+            const html = await res.text();
+            const match = html.match(/<meta\s+name="csrf-token"\s+content="([^"]+)"/i);
+            if (match) return match[1];
+            const xsrfMatch = html.match(/XSRF-TOKEN[=:]\s*["']?([a-zA-Z0-9%|=+\/]+)/i);
+            if (xsrfMatch) return decodeURIComponent(xsrfMatch[1]);
+            throw new Error('Token keamanan tidak ditemukan');
+        }
+
+        async function convertSpotify(spotifyUrl) {
+            const PROXY = 'https://corsproxy.io/?';
+            const BASE = 'https://spotmate.online';
+            const xsrf = await spotifyGetXsrf();
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'X-XSRF-TOKEN': xsrf,
+                'Origin': BASE,
+                'Referer': BASE + '/en1'
+            };
+
+            const trackRes = await fetch(PROXY + encodeURIComponent(BASE + '/getTrackData'), {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ spotify_url: spotifyUrl })
+            });
+            const t = await trackRes.json();
+
+            const convertRes = await fetch(PROXY + encodeURIComponent(BASE + '/convert'), {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ urls: spotifyUrl })
+            });
+            const d = await convertRes.json();
+
+            return {
+                title: t.name || 'Unknown Track',
+                artist: t.artists ? t.artists.map(a => a.name).join(', ') : 'Unknown',
+                duration: t.duration_ms
+                    ? Math.floor(t.duration_ms / 60000) + ':' + String(Math.floor((t.duration_ms % 60000) / 1000)).padStart(2, '0')
+                    : '0:00',
+                explicit: t.explicit || false,
+                thumbnail: (t.album && t.album.images && t.album.images[0]) ? t.album.images[0].url : null,
+                spotify_url: (t.external_urls && t.external_urls.spotify) ? t.external_urls.spotify : spotifyUrl,
+                download_url: d.url || null
+            };
+        }
+
+        // === RENDER SPOTIFY (TIDAK BERUBAH, cuma dipindah jadi fungsi sendiri) ===
+        async function renderSpotifyResult(urlInput) {
+            const preview = document.getElementById('previewContainer');
+            const dlLinks = document.getElementById('downloadLinks');
+            const resultArea = document.getElementById('resultArea');
+
+            const result = await convertSpotify(urlInput);
+
+            document.getElementById('resTitle').innerText = result.title + ' - ' + result.artist;
+            preview.innerHTML = result.thumbnail
+                ? '<img src="' + result.thumbnail + '" alt="Album Art">'
+                : '';
+
+            dlLinks.innerHTML = '';
+
+            var info = document.createElement('div');
+            info.className = 'dl-item';
+            info.style.cursor = 'default';
+            info.innerHTML = '<span><i class="fab fa-spotify" style="color:#1DB954;"></i> ' + result.duration + (result.explicit ? ' [E]' : '') + '</span>';
+            dlLinks.appendChild(info);
+
+            if (result.download_url) {
+                var dlBtn = document.createElement('a');
+                dlBtn.href = result.download_url;
+                dlBtn.target = '_blank';
+                dlBtn.className = 'dl-item';
+                dlBtn.innerHTML = '<span>MP3 - DOWNLOAD</span> <i class="fas fa-download"></i>';
+                dlLinks.appendChild(dlBtn);
+            }
+
+            resultArea.style.display = 'block';
+        }
+
+        // === UNIVERSAL DOWNLOADER ===
+        // Lewat /api/download (proxy ke downr.org, kayak yang dipake MediaDownloader),
+        // jadi platform yang bisa ke-cover jauh lebih banyak: TikTok, Douyin, Threads,
+        // IG, FB, Pinterest, Reddit, Twitter/X, YouTube, Vimeo, SoundCloud, dan lain-lain.
+        function isLinkValue(str) {
+            try {
+                new URL(str);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function gatherMediaLinks(data) {
+            let links = [];
+
+            if (typeof data === 'string' && isLinkValue(data)) {
+                return [{ label: 'Media Source', url: data }];
+            }
+
+            if (Array.isArray(data)) {
+                data.forEach((item, index) => {
+                    if (typeof item === 'string' && isLinkValue(item)) {
+                        links.push({ label: `Media Link ${index + 1}`, url: item });
+                    } else if (item && typeof item === 'object') {
+                        links = links.concat(gatherMediaLinks(item));
+                    }
+                });
+            } else if (data && typeof data === 'object') {
+                Object.entries(data).forEach(([key, value]) => {
+                    if (typeof value === 'string' && isLinkValue(value)) {
+                        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        links.push({ label, url: value });
+                    } else if (value && typeof value === 'object') {
+                        gatherMediaLinks(value).forEach(n => links.push({ label: `${key} - ${n.label}`, url: n.url }));
+                    }
+                });
+            }
+
+            return links;
+        }
+
+        function renderUniversalResult(result, links) {
+            const preview = document.getElementById('previewContainer');
+            const dlLinks = document.getElementById('downloadLinks');
+            const resultArea = document.getElementById('resultArea');
+
+            const title = (result && typeof result === 'object')
+                ? (result.title || result.description || result.caption || null)
+                : null;
+            document.getElementById('resTitle').innerText = title || 'Media Ditemukan';
+
+            const thumb = (result && typeof result === 'object')
+                ? (result.thumbnail || result.thumb || result.cover || result.image || null)
+                : null;
+            const videoLink = links.find(l => /\.(mp4|webm|mov)(\?|$)/i.test(l.url));
+
+            if (videoLink) {
+                preview.innerHTML = `<video controls><source src="${videoLink.url}"></video>`;
+            } else if (thumb) {
+                preview.innerHTML = `<img src="${thumb}">`;
+            } else {
+                preview.innerHTML = '';
+            }
+
+            dlLinks.innerHTML = '';
+            links.forEach(link => {
+                const a = document.createElement('a');
+                a.href = link.url;
+                a.target = '_blank';
+                a.className = 'dl-item';
+                a.innerHTML = `<span>${link.label.toUpperCase()}</span> <i class="fas fa-download"></i>`;
+                dlLinks.appendChild(a);
+            });
+
+            resultArea.style.display = 'block';
+        }
+
+        async function tryUniversalDownload(urlInput) {
+            try {
+                const res = await fetch('/api/download?url=' + encodeURIComponent(urlInput));
+                const data = await res.json();
+
+                if (!data || !data.Status || !data.Result) return false;
+
+                const links = gatherMediaLinks(data.Result);
+                if (links.length === 0) return false;
+
+                renderUniversalResult(data.Result, links);
+                return true;
+            } catch (err) {
+                console.error('Universal downloader gagal, coba jalur cadangan:', err);
+                return false;
+            }
+        }
+
+        // === RAPIDAPI FALLBACK (API TIDAK DIUBAH SAMA SEKALI, cuma dipindah jadi fungsi sendiri) ===
+        async function tryRapidApiDownload(urlInput) {
+            const preview = document.getElementById('previewContainer');
+            const dlLinks = document.getElementById('downloadLinks');
+            const resultArea = document.getElementById('resultArea');
+
+            const response = await axios.post('https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink', 
+                { url: urlInput },
+                {
+                    headers: {
+                        'content-type': 'application/json',
+                        'x-rapidapi-host': 'auto-download-all-in-one.p.rapidapi.com',
+                        'x-rapidapi-key': 'ca5c6d6fa3mshfcd2b0a0feac6b7p140e57jsn72684628152a'
+                    }
+                }
+            );
+
+            const data = response.data;
+            if (!data || data.error) throw new Error("Link tidak didukung atau error.");
+
+            document.getElementById('resTitle').innerText = data.title || "Media Found";
+            preview.innerHTML = "";
+            
+            if (data.medias && data.medias.length > 0) {
+                const first = data.medias[0];
+                if (first.extension === 'mp4' || first.url.includes('video')) {
+                    preview.innerHTML = `<video controls><source src="${first.url}" type="video/mp4"></video>`;
+                } else {
+                    preview.innerHTML = `<img src="${data.thumbnail || first.url}">`;
+                }
+
+                dlLinks.innerHTML = "";
+                data.medias.forEach(m => {
+                    const a = document.createElement('a');
+                    a.href = m.url;
+                    a.target = "_blank";
+                    a.className = "dl-item";
+                    a.innerHTML = `<span>${m.extension.toUpperCase()} - ${m.quality || 'HD'}</span> <i class="fas fa-download"></i>`;
+                    dlLinks.appendChild(a);
+                });
+            }
+
+            resultArea.style.display = "block";
+        }
+
+        // Fungsi Download utama, tinggal milih jalur mana yang dipake
+        async function handleDownload() {
+            const btn = document.getElementById('btnDownload');
+            addButtonClickAnimation(btn);
+            
+            const urlInput = document.getElementById('urlInput').value.trim();
+            const loader = document.getElementById('loader');
+            const errorBox = document.getElementById('errorBox');
+            const resultArea = document.getElementById('resultArea');
+
+            if (!urlInput) {
+                errorBox.innerText = "ISI DULU LINK NYA";
+                return;
+            }
+
+            errorBox.innerText = "";
+            resultArea.style.display = "none";
+            loader.style.display = "block";
+            btn.disabled = true;
+
+            try {
+                if (isSpotifyUrl(urlInput)) {
+                    await renderSpotifyResult(urlInput);
+                } else {
+                    // Coba lewat downloader universal dulu (support platform lebih banyak)
+                    const handled = await tryUniversalDownload(urlInput);
+                    if (!handled) {
+                        // Ga ketemu / gagal, balik ke API lama sebagai cadangan
+                        await tryRapidApiDownload(urlInput);
+                    }
+                }
+            } catch (err) {
+                errorBox.innerText = "Gagal mengambil data. Periksa kembali link Anda.";
+                console.error(err);
+            } finally {
+                loader.style.display = "none";
+                btn.disabled = false;
+                // Pastikan teks tombol KEMBALI KE ASLI (tidak berubah)
+                if (btn.innerText !== "GENERATE") {
+                    btn.innerText = "GENERATE";
+                }
+            }
+        }
+
+        // Initialize stars
+        createStars();
+        setThemeIcon(currentTheme());
+    </script>
+</body>
+</html>
