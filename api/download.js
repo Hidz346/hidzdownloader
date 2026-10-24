@@ -34,7 +34,7 @@ setInterval(() => {
   for (const [key, val] of cache.entries()) {
     if (now > val.expiresAt) cache.delete(key);
   }
-}, 1000 * 60 * 5);
+}, 1000 * 60 * 5).unref();
 
 // Biar 2 request bareng buat url yang sama ga numpuk fetch dobel
 const pendingRequests = new Map();
@@ -172,7 +172,9 @@ async function downloadMedia(targetUrl) {
 
 module.exports = async (req, res) => {
   try {
-    const targetUrl = (req.query && req.query.url) || (req.body && req.body.url);
+    let targetUrl = (req.query && req.query.url) || (req.body && req.body.url);
+    // ?url=a&url=b kebaca sebagai array, ambil yang pertama aja
+    if (Array.isArray(targetUrl)) targetUrl = targetUrl[0];
 
     if (!targetUrl) {
       res.status(400).json({ Status: false, Error: "URL wajib diisi." });
