@@ -356,6 +356,42 @@
             .tags { grid-template-columns: repeat(2, 1fr); }
         }
 
+        /* Tag tools tambahan, warnanya ngikutin kelompoknya */
+        .tags-toggle {
+            width: 100%;
+            margin: -8px 0 22px;
+            padding: 9px 12px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--ink);
+            background: transparent;
+            border: 2.5px dashed var(--ink);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background .12s, transform .12s;
+        }
+        .tags-toggle:hover { background: var(--paper); transform: translate(-1px, -1px); }
+        .tags-toggle:active { transform: translate(1px, 1px); }
+
+        .more-tags { margin: -6px 0 22px; }
+        .more-tags .tags { margin-bottom: 16px; }
+        .more-tags .tags:last-child { margin-bottom: 0; }
+
+        .tag-group-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            opacity: .65;
+        }
+
+        .more-tags .tag.g-music { background: var(--lime); color: var(--ink-fixed); }
+        .more-tags .tag.g-media { background: var(--blue); color: var(--white); }
+        .more-tags .tag.g-file  { background: var(--pink); color: var(--white); }
+        .more-tags .tag.g-link  { background: var(--paper); color: var(--ink); }
+
         .btn-download {
             width: 100%;
             padding: 16px;
@@ -407,7 +443,7 @@
         }
 
         #resultArea { margin-top: 20px; border-top: 3px dashed var(--ink); padding-top: 18px; }
-        #resTitle { font-size: 11.5px; font-weight: 700; color: var(--ink); margin-bottom: 10px; letter-spacing: 0.02em; }
+        #resTitle { font-size: 11.5px; font-weight: 700; color: var(--ink); margin-bottom: 10px; letter-spacing: 0.02em; overflow-wrap: anywhere; }
         #downloadLinks { margin-top: 15px; }
 
         .preview-box {
@@ -420,6 +456,7 @@
             box-shadow: var(--sh-sm);
         }
         .preview-box video, .preview-box img { width: 100%; display: block; }
+        .preview-box:empty { display: none; }
 
         .dl-item {
             display: flex;
@@ -440,6 +477,72 @@
         }
         .dl-item:hover  { background: var(--lime); color: var(--ink-fixed); transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--ink); }
         .dl-item:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+
+        /* Label + keterangan di dalam tombol unduh (nama file, ukuran, dll) */
+        .dl-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+        .dl-text b, .dl-text small, .pick-text b, .pick-text small {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .dl-text small, .pick-text small { font-size: 9.5px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.02em; }
+        .dl-item i { margin-left: 12px; flex-shrink: 0; }
+
+        .res-sub { font-size: 11px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.02em; margin-bottom: 2px; }
+
+        .track-title {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+        .track-title span { color: var(--text-dim); }
+
+        .list-title {
+            margin-top: 18px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            opacity: .65;
+        }
+
+        .pick-list { max-height: 340px; overflow-y: auto; padding: 0 6px 6px 0; }
+
+        .pick-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            margin-top: 9px;
+            padding: 8px 12px 8px 8px;
+            border: 2.5px solid var(--ink);
+            border-radius: 12px;
+            background: var(--paper);
+            color: var(--ink);
+            font-size: 11px;
+            text-align: left;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 var(--ink);
+            transition: transform .12s, box-shadow .12s, background .12s;
+        }
+        .pick-item:hover  { background: var(--lime); color: var(--ink-fixed); transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--ink); }
+        .pick-item:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+        .pick-item img {
+            width: 44px;
+            height: 44px;
+            object-fit: cover;
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+        .pick-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+        .pick-text b { font-weight: 700; }
+        .pick-item i { flex-shrink: 0; font-size: 11px; }
+        .pick-more { margin-top: 10px; font-size: 10px; font-weight: 700; color: var(--text-dim); text-align: center; }
 
         .footer {
             font-size: 10px;
@@ -489,10 +592,12 @@
             <span>&#9733; TANPA WATERMARK</span>
             <span>&#9733; 100% GRATIS</span>
             <span>&#9733; TIKTOK &bull; DOUYIN &bull; THREADS &bull; IG &bull; FB &bull; PINTEREST &bull; REDDIT &bull; X &bull; YT &bull; VIMEO &bull; SOUNDCLOUD &bull; SPOTIFY</span>
+            <span>&#9733; APPLE MUSIC &bull; BANDCAMP &bull; BILIBILI &bull; PIXIV &bull; REDNOTE &bull; TERABOX &bull; MEDIAFIRE &bull; G-DRIVE &bull; PIXELDRAIN</span>
             <span>&#9733; CEPET &amp; GA RIBET</span>
             <span>&#9733; TANPA WATERMARK</span>
             <span>&#9733; 100% GRATIS</span>
             <span>&#9733; TIKTOK &bull; DOUYIN &bull; THREADS &bull; IG &bull; FB &bull; PINTEREST &bull; REDDIT &bull; X &bull; YT &bull; VIMEO &bull; SOUNDCLOUD &bull; SPOTIFY</span>
+            <span>&#9733; APPLE MUSIC &bull; BANDCAMP &bull; BILIBILI &bull; PIXIV &bull; REDNOTE &bull; TERABOX &bull; MEDIAFIRE &bull; G-DRIVE &bull; PIXELDRAIN</span>
             <span>&#9733; CEPET &amp; GA RIBET</span>
         </div>
     </div>
@@ -534,6 +639,11 @@
                 <div class="tag" onclick="setEx('https://vimeo.com/...')">#VIMEO</div>
                 <div class="tag" onclick="setEx('https://soundcloud.com/artist/track...')">#SOUNDCLOUD</div>
             </div>
+
+            <button type="button" class="tags-toggle" id="tagsToggle" onclick="toggleMoreTags()" aria-expanded="false" aria-controls="moreTags">
+                <span id="tagsToggleSign">+</span> TOOLS LAINNYA
+            </button>
+            <div class="more-tags" id="moreTags" hidden></div>
 
             <button id="btnDownload" onclick="handleDownload()" class="btn-download">
                 GENERATE
@@ -610,93 +720,317 @@
             document.getElementById('urlInput').value = url;
         }
 
-        // === SPOTIFY SCRAPER (dari code.js, dikonversi ke browser) ===
-        function isSpotifyUrl(url) {
-            return url.includes('open.spotify.com') || url.includes('spotify.com/track');
+        // === TOOLS TAMBAHAN (lewat /api/resolve) ===
+        // Platform di luar jalur downr.org. Daftar ini dipakai buat deteksi link, bikin tag
+        // contoh, dan nentuin perlu balik ke jalur lama atau engga kalau gagal.
+        // Domain-nya sama kayak yang ada di lib/router.js, kalau nambah di sini
+        // jangan lupa nambah di sana juga.
+        const hostIs = (host, ...domains) => domains.some(d => host === d || host.endsWith('.' + d));
+
+        const SHORT_DOMAINS = [
+            'bit.ly', 'tinyurl.com', 't.co', 'is.gd', 'v.gd', 'cutt.ly', 'rb.gy', 'rebrand.ly',
+            'ow.ly', 'buff.ly', 'shorturl.at', 's.id', 'dub.sh', 'dub.co', 'aka.ms', 't.ly',
+            'tiny.cc', 'lnkd.in', 'goo.gl'
+        ];
+
+        const TERABOX_DOMAINS = [
+            'terabox.com', 'teraboxapp.com', 'terabox.app', '1024terabox.com', '1024tera.com',
+            '4funbox.com', 'mirrobox.com', 'nephobox.com', 'momerybox.com', 'tibibox.com',
+            'terasharefile.com', 'teraboxlink.com', 'freeterabox.com'
+        ];
+
+        const TOOL_GROUPS = {
+            music: 'MUSIK',
+            media: 'VIDEO & GAMBAR',
+            file: 'FILE HOST',
+            link: 'LINK & UNLOCK'
+        };
+
+        // tag = teks chip contoh (kosong = sudah ada di daftar tag awal), fallback = lanjut ke
+        // jalur downr.org / RapidAPI kalau resolver gagal
+        const EXTRA_TOOLS = [
+            { id: 'spotify', name: 'Spotify', group: 'music',
+              match: (u, h) => hostIs(h, 'spotify.com', 'spotify.link') },
+            { id: 'applemusic', name: 'Apple Music', group: 'music', tag: '#APPLE',
+              example: 'https://music.apple.com/id/album/...',
+              match: (u, h) => hostIs(h, 'music.apple.com', 'itunes.apple.com') },
+            { id: 'bandcamp', name: 'Bandcamp', group: 'music', tag: '#BANDCAMP', fallback: true,
+              example: 'https://artist.bandcamp.com/track/...',
+              match: (u, h) => hostIs(h, 'bandcamp.com') },
+            { id: 'ytplaylist', name: 'YouTube Playlist', group: 'music', tag: '#PLAYLIST',
+              example: 'https://www.youtube.com/playlist?list=...',
+              match: (u, h) => hostIs(h, 'youtube.com') && u.pathname.replace(/\/$/, '') === '/playlist' && u.searchParams.has('list') },
+
+            { id: 'bilibili', name: 'Bilibili', group: 'media', tag: '#BILIBILI', fallback: true,
+              example: 'https://www.bilibili.com/video/BV...',
+              match: (u, h) => hostIs(h, 'bilibili.com', 'bilibili.tv', 'b23.tv') },
+            { id: 'pixiv', name: 'Pixiv', group: 'media', tag: '#PIXIV',
+              example: 'https://www.pixiv.net/artworks/...',
+              match: (u, h) => hostIs(h, 'pixiv.net') },
+            { id: 'rednote', name: 'RedNote', group: 'media', tag: '#REDNOTE', fallback: true,
+              example: 'https://www.xiaohongshu.com/explore/...',
+              match: (u, h) => hostIs(h, 'xiaohongshu.com', 'xhslink.com', 'xhslink.cn', 'rednote.com') },
+
+            { id: 'terabox', name: 'TeraBox', group: 'file', tag: '#TERABOX',
+              example: 'https://www.terabox.com/s/...',
+              match: (u, h) => hostIs(h, ...TERABOX_DOMAINS) },
+            { id: 'mediafire', name: 'MediaFire', group: 'file', tag: '#MEDIAFIRE',
+              example: 'https://www.mediafire.com/file/...',
+              match: (u, h) => hostIs(h, 'mediafire.com') },
+            { id: 'sfile', name: 'Sfile', group: 'file', tag: '#SFILE',
+              example: 'https://sfile.co/...',
+              match: (u, h) => hostIs(h, 'sfile.co', 'sfile.mobi') },
+            { id: 'pixeldrain', name: 'Pixeldrain', group: 'file', tag: '#PIXELDRAIN',
+              example: 'https://pixeldrain.com/u/...',
+              match: (u, h) => hostIs(h, 'pixeldrain.com') },
+            { id: 'catbox', name: 'Catbox', group: 'file', tag: '#CATBOX',
+              example: 'https://files.catbox.moe/...',
+              match: (u, h) => hostIs(h, 'catbox.moe') },
+            { id: 'gdrive', name: 'Google Drive', group: 'file', tag: '#GDRIVE',
+              example: 'https://drive.google.com/file/d/.../view',
+              match: (u, h) => hostIs(h, 'drive.google.com', 'docs.google.com') },
+            { id: 'krakenfiles', name: 'Krakenfiles', group: 'file', tag: '#KRAKEN',
+              example: 'https://krakenfiles.com/view/.../file.html',
+              match: (u, h) => hostIs(h, 'krakenfiles.com') },
+            { id: 'doodstream', name: 'Doodstream', group: 'file', tag: '#DOOD',
+              example: 'https://dood.to/d/...',
+              match: (u, h) => /(^|\.)(dood(stream)?|doods|ds2play|playmogo)\.[a-z]{2,}$/.test(h) },
+
+            { id: 'sub2unlock', name: 'Sub2Unlock', group: 'link', tag: '#SUBUNLOCK',
+              example: 'https://sub2unlock.io/...',
+              match: (u, h) => /(^|\.)sub[24]unlock\.[a-z]{2,}$/.test(h) },
+            { id: 'rekonise', name: 'Rekonise', group: 'link', tag: '#REKONISE',
+              example: 'https://rekonise.com/...',
+              match: (u, h) => hostIs(h, 'rekonise.com') },
+            { id: 'safelinku', name: 'Safelinku', group: 'link', tag: '#SAFELINKU',
+              example: 'https://sfl.gl/...',
+              match: (u, h) => hostIs(h, 'safelinku.com', 'sfl.gl', 'semawur.com', 'khaddavi.net') },
+            { id: 'unshorten', name: 'Unshorten', group: 'link', tag: '#UNSHORTEN',
+              example: 'https://bit.ly/...',
+              match: (u, h) => hostIs(h, ...SHORT_DOMAINS) }
+        ];
+
+        // Ambil link dari teks yang di-paste (bisa ada tulisan lain di sekitarnya)
+        function parseInputUrl(raw) {
+            const str = String(raw || '').trim();
+            const found = str.match(/https?:\/\/[^\s]+/i);
+            const candidate = found ? found[0] : (/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(str) ? 'https://' + str : '');
+            try {
+                return candidate ? new URL(candidate) : null;
+            } catch (e) {
+                return null;
+            }
         }
 
-        async function spotifyGetXsrf() {
-            const PROXY = 'https://corsproxy.io/?';
-            const BASE = 'https://spotmate.online';
-            const res = await fetch(PROXY + encodeURIComponent(BASE + '/en1'));
-            const html = await res.text();
-            const match = html.match(/<meta\s+name="csrf-token"\s+content="([^"]+)"/i);
-            if (match) return match[1];
-            const xsrfMatch = html.match(/XSRF-TOKEN[=:]\s*["']?([a-zA-Z0-9%|=+\/]+)/i);
-            if (xsrfMatch) return decodeURIComponent(xsrfMatch[1]);
-            throw new Error('Token keamanan tidak ditemukan');
+        function detectExtraTool(raw) {
+            const url = parseInputUrl(raw);
+            if (!url) return null;
+            const host = url.hostname.toLowerCase();
+            return EXTRA_TOOLS.find(tool => tool.match(url, host)) || null;
         }
 
-        async function convertSpotify(spotifyUrl) {
-            const PROXY = 'https://corsproxy.io/?';
-            const BASE = 'https://spotmate.online';
-            const xsrf = await spotifyGetXsrf();
+        function buildExtraTags() {
+            const panel = document.getElementById('moreTags');
+            Object.keys(TOOL_GROUPS).forEach(groupId => {
+                const tools = EXTRA_TOOLS.filter(t => t.group === groupId && t.tag);
+                if (tools.length === 0) return;
 
-            const headers = {
-                'Content-Type': 'application/json',
-                'X-XSRF-TOKEN': xsrf,
-                'Origin': BASE,
-                'Referer': BASE + '/en1'
-            };
+                const title = document.createElement('p');
+                title.className = 'tag-group-title';
+                title.textContent = TOOL_GROUPS[groupId];
 
-            const trackRes = await fetch(PROXY + encodeURIComponent(BASE + '/getTrackData'), {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ spotify_url: spotifyUrl })
+                const grid = document.createElement('div');
+                grid.className = 'tags';
+                tools.forEach(tool => {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'tag g-' + groupId;
+                    chip.textContent = tool.tag;
+                    chip.title = tool.name;
+                    chip.addEventListener('click', () => setEx(tool.example));
+                    grid.appendChild(chip);
+                });
+
+                panel.appendChild(title);
+                panel.appendChild(grid);
             });
-            const t = await trackRes.json();
-
-            const convertRes = await fetch(PROXY + encodeURIComponent(BASE + '/convert'), {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ urls: spotifyUrl })
-            });
-            const d = await convertRes.json();
-
-            return {
-                title: t.name || 'Unknown Track',
-                artist: t.artists ? t.artists.map(a => a.name).join(', ') : 'Unknown',
-                duration: t.duration_ms
-                    ? Math.floor(t.duration_ms / 60000) + ':' + String(Math.floor((t.duration_ms % 60000) / 1000)).padStart(2, '0')
-                    : '0:00',
-                explicit: t.explicit || false,
-                thumbnail: (t.album && t.album.images && t.album.images[0]) ? t.album.images[0].url : null,
-                spotify_url: (t.external_urls && t.external_urls.spotify) ? t.external_urls.spotify : spotifyUrl,
-                download_url: d.url || null
-            };
         }
 
-        // === RENDER SPOTIFY (TIDAK BERUBAH, cuma dipindah jadi fungsi sendiri) ===
-        async function renderSpotifyResult(urlInput) {
+        function toggleMoreTags() {
+            const panel = document.getElementById('moreTags');
+            const toggle = document.getElementById('tagsToggle');
+            const opening = panel.hidden;
+            panel.hidden = !opening;
+            toggle.setAttribute('aria-expanded', String(opening));
+            document.getElementById('tagsToggleSign').textContent = opening ? '−' : '+';
+        }
+
+        function isHttpUrl(value) {
+            return typeof value === 'string' && /^https?:\/\//i.test(value);
+        }
+
+        // Satu tombol unduh. Semua teks lewat textContent biar aman dari isi yang aneh-aneh
+        function makeDownloadLink(item) {
+            if (!item || !isHttpUrl(item.url)) return null;
+
+            const a = document.createElement('a');
+            a.href = item.url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.className = 'dl-item';
+
+            const text = document.createElement('span');
+            text.className = 'dl-text';
+            const label = document.createElement('b');
+            label.textContent = String(item.label || 'Download').toUpperCase();
+            text.appendChild(label);
+            if (item.note) {
+                const note = document.createElement('small');
+                note.textContent = item.note;
+                text.appendChild(note);
+            }
+
+            const icon = document.createElement('i');
+            icon.className = 'fas ' + (item.kind === 'link' ? 'fa-external-link-alt' : 'fa-download');
+
+            a.appendChild(text);
+            a.appendChild(icon);
+            return a;
+        }
+
+        function appendDownloadLinks(container, list) {
+            (list || []).forEach(item => {
+                const a = makeDownloadLink(item);
+                if (a) container.appendChild(a);
+            });
+        }
+
+        // Klik item di daftar (playlist, album Spotify, link tujuan) = proses link itu
+        function pickItem(url) {
+            setEx(url);
+            document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            handleDownload();
+        }
+
+        function renderPickList(container, result) {
+            const heading = document.createElement('p');
+            heading.className = 'list-title';
+            heading.textContent = result.itemsTitle || 'Pilih salah satu';
+            container.appendChild(heading);
+
+            const list = document.createElement('div');
+            list.className = 'pick-list';
+
+            result.items.forEach(item => {
+                if (!isHttpUrl(item.url)) return;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'pick-item';
+                btn.addEventListener('click', () => pickItem(item.url));
+
+                if (isHttpUrl(item.thumbnail)) {
+                    const img = document.createElement('img');
+                    img.alt = '';
+                    img.loading = 'lazy';
+                    img.referrerPolicy = 'no-referrer';
+                    img.onerror = () => img.remove();
+                    img.src = item.thumbnail;
+                    btn.appendChild(img);
+                }
+
+                const text = document.createElement('span');
+                text.className = 'pick-text';
+                const name = document.createElement('b');
+                name.textContent = item.title;
+                text.appendChild(name);
+                if (item.subtitle) {
+                    const sub = document.createElement('small');
+                    sub.textContent = item.subtitle;
+                    text.appendChild(sub);
+                }
+
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-arrow-right';
+
+                btn.appendChild(text);
+                btn.appendChild(icon);
+                list.appendChild(btn);
+            });
+
+            container.appendChild(list);
+
+            if (result.moreItems > 0) {
+                const more = document.createElement('p');
+                more.className = 'pick-more';
+                more.textContent = '+' + result.moreItems + ' LAINNYA TIDAK DITAMPILKAN';
+                container.appendChild(more);
+            }
+        }
+
+        function renderResolvedResult(result) {
             const preview = document.getElementById('previewContainer');
             const dlLinks = document.getElementById('downloadLinks');
             const resultArea = document.getElementById('resultArea');
 
-            const result = await convertSpotify(urlInput);
+            document.getElementById('resTitle').innerText = result.title || 'Media Ditemukan';
 
-            document.getElementById('resTitle').innerText = result.title + ' - ' + result.artist;
-            preview.innerHTML = result.thumbnail
-                ? '<img src="' + result.thumbnail + '" alt="Album Art">'
-                : '';
+            preview.textContent = '';
+            if (isHttpUrl(result.thumbnail)) {
+                const img = document.createElement('img');
+                img.alt = '';
+                img.referrerPolicy = 'no-referrer';
+                // gambar sumber kadang mati / diblokir, jangan sisain kotak kosong
+                img.onerror = () => { preview.textContent = ''; };
+                img.src = result.thumbnail;
+                preview.appendChild(img);
+            }
 
-            dlLinks.innerHTML = '';
+            dlLinks.textContent = '';
 
-            var info = document.createElement('div');
-            info.className = 'dl-item';
-            info.style.cursor = 'default';
-            info.innerHTML = '<span><i class="fab fa-spotify" style="color:#1DB954;"></i> ' + result.duration + (result.explicit ? ' [E]' : '') + '</span>';
-            dlLinks.appendChild(info);
+            if (result.subtitle) {
+                const sub = document.createElement('p');
+                sub.className = 'res-sub';
+                sub.textContent = result.subtitle;
+                dlLinks.appendChild(sub);
+            }
 
-            if (result.download_url) {
-                var dlBtn = document.createElement('a');
-                dlBtn.href = result.download_url;
-                dlBtn.target = '_blank';
-                dlBtn.className = 'dl-item';
-                dlBtn.innerHTML = '<span>MP3 - DOWNLOAD</span> <i class="fas fa-download"></i>';
-                dlLinks.appendChild(dlBtn);
+            appendDownloadLinks(dlLinks, result.downloads);
+
+            (result.tracks || []).forEach((track, index) => {
+                const head = document.createElement('p');
+                head.className = 'track-title';
+                const num = document.createElement('span');
+                num.textContent = String(index + 1).padStart(2, '0');
+                head.appendChild(num);
+                head.appendChild(document.createTextNode(track.title));
+                dlLinks.appendChild(head);
+                appendDownloadLinks(dlLinks, track.downloads);
+            });
+
+            if (result.items && result.items.length > 0) {
+                renderPickList(dlLinks, result);
             }
 
             resultArea.style.display = 'block';
+        }
+
+        async function tryResolveDownload(urlInput) {
+            try {
+                const res = await fetch('/api/resolve?url=' + encodeURIComponent(urlInput));
+                const data = await res.json();
+
+                if (!data || !data.Status || !data.Result) {
+                    if (data && data.Error) console.warn('Resolver:', data.Error);
+                    return false;
+                }
+
+                renderResolvedResult(data.Result);
+                return true;
+            } catch (err) {
+                console.error('Resolver gagal:', err);
+                return false;
+            }
         }
 
         // === UNIVERSAL DOWNLOADER ===
@@ -704,9 +1038,10 @@
         // jadi platform yang bisa ke-cover jauh lebih banyak: TikTok, Douyin, Threads,
         // IG, FB, Pinterest, Reddit, Twitter/X, YouTube, Vimeo, SoundCloud, dan lain-lain.
         function isLinkValue(str) {
+            if (typeof str !== 'string') return false;
             try {
-                new URL(str);
-                return true;
+                const parsed = new URL(str);
+                return parsed.protocol === 'http:' || parsed.protocol === 'https:';
             } catch (e) {
                 return false;
             }
@@ -756,22 +1091,25 @@
                 : null;
             const videoLink = links.find(l => /\.(mp4|webm|mov)(\?|$)/i.test(l.url));
 
+            preview.textContent = '';
             if (videoLink) {
-                preview.innerHTML = `<video controls><source src="${videoLink.url}"></video>`;
-            } else if (thumb) {
-                preview.innerHTML = `<img src="${thumb}">`;
-            } else {
-                preview.innerHTML = '';
+                const video = document.createElement('video');
+                video.controls = true;
+                const source = document.createElement('source');
+                source.src = videoLink.url;
+                video.appendChild(source);
+                preview.appendChild(video);
+            } else if (isHttpUrl(thumb)) {
+                const img = document.createElement('img');
+                img.src = thumb;
+                img.alt = '';
+                preview.appendChild(img);
             }
 
-            dlLinks.innerHTML = '';
+            dlLinks.textContent = '';
             links.forEach(link => {
-                const a = document.createElement('a');
-                a.href = link.url;
-                a.target = '_blank';
-                a.className = 'dl-item';
-                a.innerHTML = `<span>${link.label.toUpperCase()}</span> <i class="fas fa-download"></i>`;
-                dlLinks.appendChild(a);
+                const a = makeDownloadLink({ label: link.label, url: link.url });
+                if (a) dlLinks.appendChild(a);
             });
 
             resultArea.style.display = 'block';
@@ -815,27 +1153,35 @@
             const data = response.data;
             if (!data || data.error) throw new Error("Link tidak didukung atau error.");
 
-            document.getElementById('resTitle').innerText = data.title || "Media Found";
-            preview.innerHTML = "";
-            
-            if (data.medias && data.medias.length > 0) {
-                const first = data.medias[0];
-                if (first.extension === 'mp4' || first.url.includes('video')) {
-                    preview.innerHTML = `<video controls><source src="${first.url}" type="video/mp4"></video>`;
-                } else {
-                    preview.innerHTML = `<img src="${data.thumbnail || first.url}">`;
-                }
+            const medias = Array.isArray(data.medias) ? data.medias.filter(m => m && isHttpUrl(m.url)) : [];
+            if (medias.length === 0) throw new Error("Link tidak didukung atau error.");
 
-                dlLinks.innerHTML = "";
-                data.medias.forEach(m => {
-                    const a = document.createElement('a');
-                    a.href = m.url;
-                    a.target = "_blank";
-                    a.className = "dl-item";
-                    a.innerHTML = `<span>${m.extension.toUpperCase()} - ${m.quality || 'HD'}</span> <i class="fas fa-download"></i>`;
-                    dlLinks.appendChild(a);
-                });
+            document.getElementById('resTitle').innerText = data.title || "Media Found";
+            preview.textContent = "";
+
+            const first = medias[0];
+            if (first.extension === 'mp4' || first.url.includes('video')) {
+                const video = document.createElement('video');
+                video.controls = true;
+                const source = document.createElement('source');
+                source.src = first.url;
+                source.type = 'video/mp4';
+                video.appendChild(source);
+                preview.appendChild(video);
+            } else {
+                const previewSrc = isHttpUrl(data.thumbnail) ? data.thumbnail : first.url;
+                const img = document.createElement('img');
+                img.src = previewSrc;
+                img.alt = '';
+                preview.appendChild(img);
             }
+
+            dlLinks.textContent = "";
+            medias.forEach(m => {
+                const label = (m.extension || 'FILE') + ' - ' + (m.quality || 'HD');
+                const a = makeDownloadLink({ label: label, url: m.url });
+                if (a) dlLinks.appendChild(a);
+            });
 
             resultArea.style.display = "block";
         }
@@ -861,11 +1207,21 @@
             btn.disabled = true;
 
             try {
-                if (isSpotifyUrl(urlInput)) {
-                    await renderSpotifyResult(urlInput);
-                } else {
+                let handled = false;
+
+                // Platform tambahan (Spotify, Bandcamp, MediaFire, dll) lewat resolver sendiri dulu
+                const tool = detectExtraTool(urlInput);
+                if (tool) {
+                    handled = await tryResolveDownload(urlInput);
+                    if (!handled && !tool.fallback) {
+                        errorBox.innerText = "Gagal mengambil data dari " + tool.name + ". Periksa kembali link Anda.";
+                        return;
+                    }
+                }
+
+                if (!handled) {
                     // Coba lewat downloader universal dulu (support platform lebih banyak)
-                    const handled = await tryUniversalDownload(urlInput);
+                    handled = await tryUniversalDownload(urlInput);
                     if (!handled) {
                         // Ga ketemu / gagal, balik ke API lama sebagai cadangan
                         await tryRapidApiDownload(urlInput);
@@ -886,6 +1242,7 @@
 
         // Initialize stars
         createStars();
+        buildExtraTags();
         setThemeIcon(currentTheme());
     </script>
 </body>

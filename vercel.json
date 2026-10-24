@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "api/download.js": { "maxDuration": 60 },
+    "api/resolve.js": { "maxDuration": 60 }
+  }
+}
