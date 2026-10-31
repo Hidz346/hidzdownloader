@@ -26,6 +26,18 @@ const CHECKS = [
       }),
   },
   {
+    name: "relay youtube (YT_RELAY_URL)",
+    run: () => {
+      const base = String(process.env.YT_RELAY_URL || "").trim().replace(/\/+$/, "");
+      if (!base) return Promise.resolve({ status: null, data: "YT_RELAY_URL belum diisi di Vercel" });
+      return axios.get(base + "/health", {
+        headers: { "x-relay-key": process.env.YT_RELAY_KEY || "" },
+        timeout: 8000,
+        validateStatus: () => true,
+      });
+    },
+  },
+  {
     name: "youtube oembed (judul & thumbnail)",
     run: () =>
       axios.get("https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ&format=json", {

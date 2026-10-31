@@ -13,6 +13,8 @@ lib/router.js         daftar platform + urutan scraper (kalau satu gagal lanjut 
 lib/normalize.js      nyeragamin bentuk hasil tiap scraper buat index.html
 lib/guard.js          nolak alamat internal (localhost, jaringan lokal) sebelum diambil server
 lib/scrapers/         scraper per platform
+relay/server.js       relay YouTube buat dijalanin di HP / jaringan rumahan (opsional, lihat di bawah)
+api/cek.js            alat cek sementara (server sumber bisa dijangkau dari Vercel atau engga), hapus kalau sudah ga dipake
 vercel.json           batas waktu function (60 detik)
 ```
 
@@ -41,6 +43,40 @@ Tiap tombol unduh ditandai VIDEO / AUDIO / GAMBAR / FILE (`kindOf()` di index.ht
 campuran urutannya video dulu, lalu audio, gambar, file.
 
 Hasil album/playlist (Spotify, YouTube) tampil sebagai daftar, klik salah satu buat diproses.
+
+## YouTube lewat relay (kalau converter nolak IP Vercel)
+
+Converter YouTube (ytmp3 / ytmp3gg) kadang nolak IP datacenter, termasuk Vercel. Tandanya di `/api/cek`:
+`convert1s` status 403 dan `ytmp3.mobi` balas `ERR_UNSUPPORTED_PROXY`. Kalau begitu, link YouTube bisa
+dikerjain lewat relay yang jalan di jaringan lain (misal HP lewat Termux), pakai scraper yang sama.
+
+Di HP (Termux), dua sesi:
+
+```
+# sesi 1: relay
+cd hidzdownloader && npm install
+termux-wake-lock
+RELAY_KEY=isi-kunci-rahasia-minimal-16-karakter node relay/server.js
+
+# sesi 2: tunnel ke internet
+pkg install cloudflared
+cloudflared tunnel --url http://127.0.0.1:8787
+```
+
+Tunnel nampilin alamat `https://xxxx.trycloudflare.com`. Isi dua env di Vercel (Settings > Environment
+Variables), terus redeploy:
+
+| Env | Isi |
+| --- | --- |
+| `YT_RELAY_URL` | alamat tunnel tadi |
+| `YT_RELAY_KEY` | sama persis kayak `RELAY_KEY` |
+
+Cek lewat `/api/cek`, baris "relay youtube" harus status 200. Alamat tunnel cepat (`trycloudflare.com`)
+berubah tiap tunnel dimulai ulang, jadi env `YT_RELAY_URL` perlu diganti lagi. Buat alamat tetap pakai
+named tunnel Cloudflare.
+
+Kalau `YT_RELAY_URL` kosong, semuanya jalan seperti biasa. Kalau diisi tapi relay mati, link YouTube tetap
+dicoba lewat jalur langsung. Relay cuma mau melayani link video YouTube dan nolak permintaan tanpa kunci.
 
 ## Nambah platform
 
