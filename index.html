@@ -489,6 +489,26 @@
         .dl-text small, .pick-text small { font-size: 9.5px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.02em; }
         .dl-item i { margin-left: 12px; flex-shrink: 0; }
 
+        /* Penanda jenis file: video / audio / gambar / file */
+        .dl-kind {
+            flex-shrink: 0;
+            align-self: center;
+            margin-right: 11px;
+            min-width: 54px;
+            padding: 4px 6px;
+            border: 2px solid var(--ink);
+            border-radius: 7px;
+            font-size: 8.5px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-align: center;
+            color: var(--ink-fixed);
+            background: var(--paper);
+        }
+        .dl-kind.k-video { background: var(--blue); color: var(--white); }
+        .dl-kind.k-audio { background: var(--pink); color: var(--white); }
+        .dl-kind.k-image { background: var(--lime); }
+
         .res-sub { font-size: 11px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.02em; margin-bottom: 2px; }
 
         .track-title {
@@ -748,7 +768,8 @@
         };
 
         // tag = teks chip contoh (kosong = sudah ada di daftar tag awal), fallback = lanjut ke
-        // jalur downr.org / RapidAPI kalau resolver gagal
+        // jalur downr.org / RapidAPI kalau resolver gagal, backup = urutan dibalik (downr dulu,
+        // resolver sebagai cadangan sebelum RapidAPI)
         const EXTRA_TOOLS = [
             { id: 'spotify', name: 'Spotify', group: 'music',
               match: (u, h) => hostIs(h, 'spotify.com', 'spotify.link') },
@@ -761,6 +782,13 @@
             { id: 'ytplaylist', name: 'YouTube Playlist', group: 'music', tag: '#PLAYLIST',
               example: 'https://www.youtube.com/playlist?list=...',
               match: (u, h) => hostIs(h, 'youtube.com') && u.pathname.replace(/\/$/, '') === '/playlist' && u.searchParams.has('list') },
+
+            // Video YouTube: jalur downr.org / RapidAPI ngasih link googlevideo yang ditolak (403)
+            // kalau dibuka dari browser, jadi dikonversi lewat resolver. Tanpa chip, sudah ada di tag awal.
+            { id: 'youtube', name: 'YouTube', group: 'music',
+              match: (u, h) => (h === 'youtu.be' && u.pathname.length > 1) ||
+                  (hostIs(h, 'youtube.com', 'youtube-nocookie.com') &&
+                      ((u.pathname === '/watch' && u.searchParams.has('v')) || /^\/(shorts|live|embed|v)\/[\w-]{11}/.test(u.pathname))) },
 
             { id: 'bilibili', name: 'Bilibili', group: 'media', tag: '#BILIBILI', fallback: true,
               example: 'https://www.bilibili.com/video/BV...',
@@ -808,7 +836,19 @@
               match: (u, h) => hostIs(h, 'safelinku.com', 'sfl.gl', 'semawur.com', 'khaddavi.net') },
             { id: 'unshorten', name: 'Unshorten', group: 'link', tag: '#UNSHORTEN',
               example: 'https://bit.ly/...',
-              match: (u, h) => hostIs(h, ...SHORT_DOMAINS) }
+              match: (u, h) => hostIs(h, ...SHORT_DOMAINS) },
+
+            // Cadangan: platform ini tetap lewat downr.org dulu, resolver baru dipakai kalau downr gagal
+            { id: 'tiktok', name: 'TikTok', backup: true, match: (u, h) => hostIs(h, 'tiktok.com') },
+            { id: 'douyin', name: 'Douyin', backup: true, match: (u, h) => hostIs(h, 'douyin.com', 'iesdouyin.com') },
+            { id: 'instagram', name: 'Instagram', backup: true, match: (u, h) => hostIs(h, 'instagram.com', 'instagr.am') },
+            { id: 'facebook', name: 'Facebook', backup: true, match: (u, h) => hostIs(h, 'facebook.com', 'fb.watch', 'fb.com') },
+            { id: 'twitter', name: 'X (Twitter)', backup: true, match: (u, h) => hostIs(h, 'twitter.com', 'x.com') },
+            { id: 'threads', name: 'Threads', backup: true, match: (u, h) => hostIs(h, 'threads.net', 'threads.com') },
+            { id: 'pinterest', name: 'Pinterest', backup: true,
+              match: (u, h) => hostIs(h, 'pinterest.com', 'pin.it') || /(^|\.)pinterest\.[a-z.]{2,}$/.test(h) },
+            { id: 'reddit', name: 'Reddit', backup: true, match: (u, h) => hostIs(h, 'reddit.com', 'redd.it') },
+            { id: 'soundcloud', name: 'SoundCloud', backup: true, match: (u, h) => hostIs(h, 'soundcloud.com') }
         ];
 
         // Ambil link dari teks yang di-paste (bisa ada tulisan lain di sekitarnya)
@@ -870,6 +910,21 @@
             return typeof value === 'string' && /^https?:\/\//i.test(value);
         }
 
+        // Jenis file ditebak dari tipe/label/ekstensi kalau sumbernya ga ngasih tau langsung
+        const KIND_TEXT = { video: 'VIDEO', audio: 'AUDIO', image: 'GAMBAR', file: 'FILE' };
+
+        function guessKind(url, hint) {
+            const probe = (String(hint || '') + ' ' + String(url || '').split('?')[0]).toLowerCase();
+            if (/\.(jpe?g|png|webp|gif|avif)\b|image|photo|cover|thumbnail|gambar/.test(probe)) return 'image';
+            if (/\.(mp3|m4a|aac|flac|wav|ogg|opus)\b|audio|mp3|m4a|opus/.test(probe)) return 'audio';
+            if (/\.(mp4|webm|mov|m4v|mkv|m3u8)\b|video|mp4|webm/.test(probe)) return 'video';
+            return '';
+        }
+
+        function kindOf(item) {
+            return KIND_TEXT[item.kind] ? item.kind : guessKind(item.url, item.label);
+        }
+
         // Satu tombol unduh. Semua teks lewat textContent biar aman dari isi yang aneh-aneh
         function makeDownloadLink(item) {
             if (!item || !isHttpUrl(item.url)) return null;
@@ -879,6 +934,14 @@
             a.target = '_blank';
             a.rel = 'noopener noreferrer';
             a.className = 'dl-item';
+
+            const kind = kindOf(item);
+            if (kind) {
+                const badge = document.createElement('span');
+                badge.className = 'dl-kind k-' + kind;
+                badge.textContent = KIND_TEXT[kind];
+                a.appendChild(badge);
+            }
 
             const text = document.createElement('span');
             text.className = 'dl-text';
@@ -899,8 +962,17 @@
             return a;
         }
 
+        // Kalau hasilnya campuran, video di atas lalu audio, gambar, dan sisanya
+        // (urutan asli di dalam tiap jenis tetap)
         function appendDownloadLinks(container, list) {
-            (list || []).forEach(item => {
+            const order = { video: 0, audio: 1, image: 2, file: 3 };
+            const rank = item => order[kindOf(item)] ?? 4;
+            const sorted = (list || [])
+                .filter(item => item && typeof item === 'object')
+                .map((item, index) => ({ item, index }))
+                .sort((x, y) => rank(x.item) - rank(y.item) || x.index - y.index);
+
+            sorted.forEach(({ item }) => {
                 const a = makeDownloadLink(item);
                 if (a) container.appendChild(a);
             });
@@ -1048,6 +1120,31 @@
             }
         }
 
+        // Satu entri media dari downr.org / RapidAPI (url + tipe, kualitas, ekstensi, dll)
+        // diubah jadi satu tombol dengan label yang bisa dibaca
+        function describeMedia(item) {
+            const pick = (...keys) => {
+                for (const key of keys) {
+                    if (typeof item[key] === 'string' && item[key].trim()) return item[key].trim();
+                }
+                return '';
+            };
+
+            const type = pick('type').toLowerCase();
+            const ext = pick('extension', 'ext', 'format').replace(/^\./, '');
+            const quality = pick('quality', 'resolution', 'label');
+
+            let label = quality;
+            if (ext && !quality.toLowerCase().includes(ext.toLowerCase())) label = quality ? ext + ' · ' + quality : ext;
+            if (!label) label = type || 'Download';
+
+            // video tanpa suara (format YouTube 1080p ke atas biasanya begini)
+            const mute = item.videoAvailable === true && item.audioAvailable === false;
+            const kind = KIND_TEXT[type] ? type : guessKind(item.url, label + ' ' + ext);
+
+            return { label, url: item.url, kind, note: mute ? 'Tanpa suara' : '', media: true };
+        }
+
         function gatherMediaLinks(data) {
             let links = [];
 
@@ -1059,6 +1156,8 @@
                 data.forEach((item, index) => {
                     if (typeof item === 'string' && isLinkValue(item)) {
                         links.push({ label: `Media Link ${index + 1}`, url: item });
+                    } else if (item && typeof item === 'object' && isLinkValue(item.url)) {
+                        links.push(describeMedia(item));
                     } else if (item && typeof item === 'object') {
                         links = links.concat(gatherMediaLinks(item));
                     }
@@ -1069,7 +1168,7 @@
                         const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                         links.push({ label, url: value });
                     } else if (value && typeof value === 'object') {
-                        gatherMediaLinks(value).forEach(n => links.push({ label: `${key} - ${n.label}`, url: n.url }));
+                        gatherMediaLinks(value).forEach(n => links.push(n.media ? n : { label: `${key} - ${n.label}`, url: n.url }));
                     }
                 });
             }
@@ -1093,25 +1192,31 @@
             const videoLink = links.find(l => /\.(mp4|webm|mov)(\?|$)/i.test(l.url));
 
             preview.textContent = '';
+            const showThumb = () => {
+                preview.textContent = '';
+                if (!isHttpUrl(thumb)) return;
+                const img = document.createElement('img');
+                img.src = thumb;
+                img.alt = '';
+                img.onerror = () => { preview.textContent = ''; };
+                preview.appendChild(img);
+            };
+
             if (videoLink) {
                 const video = document.createElement('video');
                 video.controls = true;
                 const source = document.createElement('source');
                 source.src = videoLink.url;
+                // link video yang ditolak server sumber (403 dll) jangan dibiarin jadi pemutar kosong
+                source.addEventListener('error', showThumb);
                 video.appendChild(source);
                 preview.appendChild(video);
-            } else if (isHttpUrl(thumb)) {
-                const img = document.createElement('img');
-                img.src = thumb;
-                img.alt = '';
-                preview.appendChild(img);
+            } else {
+                showThumb();
             }
 
             dlLinks.textContent = '';
-            links.forEach(link => {
-                const a = makeDownloadLink({ label: link.label, url: link.url });
-                if (a) dlLinks.appendChild(a);
-            });
+            appendDownloadLinks(dlLinks, links);
 
             resultArea.style.display = 'block';
         }
@@ -1161,28 +1266,31 @@
             preview.textContent = "";
 
             const first = medias[0];
+            const showThumb = () => {
+                preview.textContent = "";
+                const img = document.createElement('img');
+                img.src = isHttpUrl(data.thumbnail) ? data.thumbnail : first.url;
+                img.alt = '';
+                img.onerror = () => { preview.textContent = ""; };
+                preview.appendChild(img);
+            };
+
             if (first.extension === 'mp4' || first.url.includes('video')) {
                 const video = document.createElement('video');
                 video.controls = true;
                 const source = document.createElement('source');
                 source.src = first.url;
                 source.type = 'video/mp4';
+                // link ditolak server sumber (403 dll) -> ganti ke thumbnail, bukan pemutar kosong
+                source.addEventListener('error', showThumb);
                 video.appendChild(source);
                 preview.appendChild(video);
             } else {
-                const previewSrc = isHttpUrl(data.thumbnail) ? data.thumbnail : first.url;
-                const img = document.createElement('img');
-                img.src = previewSrc;
-                img.alt = '';
-                preview.appendChild(img);
+                showThumb();
             }
 
             dlLinks.textContent = "";
-            medias.forEach(m => {
-                const label = (m.extension || 'FILE') + ' - ' + (m.quality || 'HD');
-                const a = makeDownloadLink({ label: label, url: m.url });
-                if (a) dlLinks.appendChild(a);
-            });
+            appendDownloadLinks(dlLinks, medias.map(describeMedia));
 
             resultArea.style.display = "block";
         }
@@ -1210,9 +1318,10 @@
             try {
                 let handled = false;
 
-                // Platform tambahan (Spotify, Bandcamp, MediaFire, dll) lewat resolver sendiri dulu
+                // Platform tambahan (Spotify, YouTube, MediaFire, dll) lewat resolver sendiri dulu.
+                // Platform "backup" (TikTok, IG, dll) tetap lewat downr.org dulu, resolver cuma cadangan.
                 const tool = detectExtraTool(urlInput);
-                if (tool) {
+                if (tool && !tool.backup) {
                     handled = await tryResolveDownload(urlInput);
                     if (!handled && !tool.fallback) {
                         errorBox.innerText = "Gagal mengambil data dari " + tool.name + ". Periksa kembali link Anda.";
@@ -1223,10 +1332,15 @@
                 if (!handled) {
                     // Coba lewat downloader universal dulu (support platform lebih banyak)
                     handled = await tryUniversalDownload(urlInput);
-                    if (!handled) {
-                        // Ga ketemu / gagal, balik ke API lama sebagai cadangan
-                        await tryRapidApiDownload(urlInput);
-                    }
+                }
+
+                if (!handled && tool && tool.backup) {
+                    handled = await tryResolveDownload(urlInput);
+                }
+
+                if (!handled) {
+                    // Ga ketemu / gagal, balik ke API lama sebagai cadangan
+                    await tryRapidApiDownload(urlInput);
                 }
             } catch (err) {
                 errorBox.innerText = "Gagal mengambil data. Periksa kembali link Anda.";
